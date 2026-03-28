@@ -1,0 +1,73 @@
+# Use NVIDIA L4T base image for Jetson
+FROM nvcr.io/nvidia/l4t-pytorch:r35.2.1-pth2.0-py3
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV CUDA_HOME=/usr/local/cuda
+ENV PATH=${CUDA_HOME}/bin:${PATH}
+ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    curl \
+    libgomp1 \
+    libusb-1.0-0-dev \
+    libboost-all-dev \
+    python3-pip \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt /tmp/
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+
+# Install TensorRT (included in L4T base)
+RUN pip3 install --no-cache-dir \
+    tensorrt \
+    pycuda \
+    onnx \
+    onnxruntime-gpu
+
+# Install ROS2 Humble (for Unitree G1)
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    && add-apt-repository universe \
+    && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y \
+    ros-humble-ros-base \
+    ros-humble-rmw-cyclonedds-cpp \
+    python3-colcon-common-extensions \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup ROS2 environment
+RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
+# Create app directory
+WORKDIR /app
+
+# Copy source code
+COPY src/ /app/src/
+COPY config/ /app/config/
+COPY scripts/ /app/scripts/
+
+# Create model cache directory
+RUN mkdir -p /app/models/cache
+
+# Expose ports
+EXPOSE 8080
+EXPOSE 8888
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Run edge gateway
+CMD ["python3", "-u", "src/edge_gateway.py"]

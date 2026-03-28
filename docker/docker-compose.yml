@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  nwo-edge-gateway:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.jetson
+    image: nwo-edge-gateway:jetson
+    container_name: nwo-edge-gateway
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NWO_API_KEY=${NWO_API_KEY}
+      - NWO_AGENT_ID=${NWO_AGENT_ID:-g1_001}
+      - NWO_CLOUD_URL=${NWO_CLOUD_URL:-https://nwo.capital/webapp}
+      - EDGE_SERVO_RATE=${EDGE_SERVO_RATE:-1000}
+      - EDGE_MODEL_CACHE_MB=${EDGE_MODEL_CACHE_MB:-2048}
+      - EDGE_CLOUD_SYNC_HZ=${EDGE_CLOUD_SYNC_HZ:-10}
+      - TENSORRT_FP16=${TENSORRT_FP16:-true}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+    ports:
+      - "8080:8080"
+      - "8888:8888"
+    volumes:
+      - /dev/shm:/dev/shm
+      - /tmp/argus_socket:/tmp/argus_socket
+      - ./models:/app/models
+      - ./config:/app/config
+    privileged: true
+    network_mode: host
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
