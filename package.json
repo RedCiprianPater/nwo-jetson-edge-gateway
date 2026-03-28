@@ -1,0 +1,32 @@
+{
+  "name": "NWO Jetson Edge Gateway",
+  "description": "Hybrid edge-cloud gateway for Jetson Orin with 1kHz servo control",
+  "version": "1.0.0",
+  "author": "NWO Robotics",
+  "license": "MIT",
+  "hardware": {
+    "platform": "NVIDIA Jetson Orin",
+    "supported": ["Jetson Orin Nano", "Jetson Orin NX", "Jetson AGX Orin"]
+  },
+  "features": [
+    "1kHz real-time servo control",
+    "TensorRT model caching",
+    "Hybrid edge-cloud inference",
+    "Telemetry batching",
+    "Auto-failover to cloud"
+  ],
+  "models": {
+    "cached": ["xiaomi-robotics-0", "pi05"],
+    "cloud": ["gr00t-n1.7", "gr00t-n2"]
+  },
+  "api": {
+    "port": 8080,
+    "endpoints": [
+      "/health",
+      "/models",
+      "/control/servo",
+      "/inference/local",
+      "/inference/cloud"
+    ]
+  }
+}

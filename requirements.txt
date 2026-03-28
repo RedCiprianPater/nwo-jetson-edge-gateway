@@ -1,0 +1,8 @@
+flask>=2.0.0
+numpy>=1.21.0
+requests>=2.25.0
+pycuda>=2021.1
+tensorrt>=8.0.0
+onnx>=1.10.0
+onnxruntime-gpu>=1.10.0
+pyyaml>=5.4.0
