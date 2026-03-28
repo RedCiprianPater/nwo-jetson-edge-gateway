@@ -1,0 +1,44 @@
+# NWO Jetson Edge Gateway Configuration
+
+# Cloud API settings
+cloud:
+  url: "https://nwo.capital/webapp"
+  sync_interval_hz: 10
+  telemetry_batch_size: 100
+  timeout_seconds: 5
+
+# Edge gateway settings
+edge:
+  servo_rate_hz: 1000
+  model_cache_mb: 2048
+  inference_timeout_ms: 5
+  
+# TensorRT optimization
+tensorrt:
+  fp16: true
+  max_batch_size: 4
+  workspace_mb: 2048
+
+# Servo control
+servo:
+  num_joints: 23
+  kp: 100.0
+  kd: 10.0
+  max_torque_nm: 80.0
+  max_velocity_rads: 10.0
+
+# Models to cache locally
+models:
+  cached:
+    - xiaomi-robotics-0
+    - pi05
+  cloud_only:
+    - gr00t-n1.7
+    - gr00t-n2
+
+# Logging
+logging:
+  level: INFO
+  file: logs/edge_gateway.log
+  max_size_mb: 100
+  backup_count: 5
